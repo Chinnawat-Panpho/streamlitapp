@@ -1,6 +1,6 @@
 import pandas as pd
 import streamlit as st
-import yfinacne as yf
+import yfinance as yf
 
 st.write("""
 # Welcome to my first streamlit app!
