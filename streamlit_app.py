@@ -2,25 +2,50 @@ import pandas as pd
 import streamlit as st
 import yfinance as yf
 
-st.write("""
-# Welcome to my first streamlit app!
 
-This is a simple app that demonstrates how to use Streamlit to create interactive web applications with Python. You can use this app to display data, create visualizations, and interact with your data in real-time.
+@st.cache_data
+def download_stock_data(ticker, start_date, end_date):
+    return yf.download(
+        ticker,
+        start=start_date,
+        end=end_date,
+        auto_adjust=False,
+        progress=False,
+    )
 
-# About this app
 
-This app will be using Yahoo Finance API to get stock data and display it in a simple and interactive way. You can enter a stock ticker symbol, and the app will fetch the latest stock data for that symbol and display it in a table.
+st.title("Stock Data Dashboard")
+st.write(
+    "Enter a stock ticker and date range to view historical data from Yahoo Finance."
+)
 
-""")
-# Select ticker symbol
-ticker = st.text_input("Enter a stock ticker symbol (e.g. AAPL, MSFT, GOOGL):")
+ticker = st.text_input(
+    "Stock ticker",
+    placeholder="AAPL",
+).strip().upper()
+start_date = st.date_input("Start date", value=pd.Timestamp("2020-01-01").date())
+end_date = st.date_input("End date", value=pd.Timestamp.today().date())
 
-# Select date range
-start_date = st.date_input("Start date", pd.to_datetime("2020-01-01"))
-end_date = st.date_input("End date", "today")
+if not ticker:
+    st.info("Enter a stock ticker to begin.")
+    st.stop()
 
-#Get data from Yahoo Finance API
-if ticker:
-    st.write(f"Fetching data for {ticker} from {start_date} to {end_date}...")
-    data = yf.download(ticker, start=start_date, end=end_date)
-    st.dataframe(data)
+if start_date >= end_date:
+    st.error("The end date must be after the start date.")
+    st.stop()
+
+st.write(f"Fetching data for **{ticker}** from {start_date} to {end_date}...")
+
+try:
+    with st.spinner("Downloading stock data..."):
+        data = download_stock_data(ticker, start_date, end_date)
+except Exception as error:
+    st.error(f"Unable to fetch data for {ticker}: {error}")
+    st.stop()
+
+if data.empty:
+    st.warning("No data was found for that ticker and date range.")
+    st.stop()
+
+st.success(f"Data for {ticker} fetched successfully.")
+st.line_chart(data["Close"])
