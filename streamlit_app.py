@@ -1,5 +1,6 @@
 import pandas as pd
 import streamlit as st
+import yfinacne as yf
 
 st.write("""
 # Welcome to my first streamlit app!
@@ -15,7 +16,11 @@ This app will be using Yahoo Finance API to get stock data and display it in a s
 ticker = st.text_input("Enter a stock ticker symbol (e.g. AAPL, MSFT, GOOGL):")
 
 # Select date range
-
 start_date = st.date_input("Start date", pd.to_datetime("2020-01-01"))
 end_date = st.date_input("End date", "today")
 
+#Get data from Yahoo Finance API
+if ticker:
+    st.write(f"Fetching data for {ticker} from {start_date} to {end_date}...")
+    data = yf.download(ticker, start=start_date, end=end_date)
+    st.dataframe(data)
